@@ -1,0 +1,16 @@
+services:
+
+  clients-migrations:
+    env_file: .env
+    image: "${CLIENTS_MIGRATIONS_IMAGE_NAME}"
+    environment:
+      - DB_USERNAME=${CLIENTS_DB_USERNAME}
+      - DB_PASSWORD=${CLIENTS_DB_PASSWORD}
+      - DB_DATABASE=${CLIENTS_DB_NAME}
+      - DB_PORT=${CLIENTS_DB_PORT}
+      - DB_HOST=${CLIENTS_DB_HOST}
+
+networks:
+  default:
+    name: ${CLIENTS_NETWORK}
+    external: true

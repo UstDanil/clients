@@ -1,0 +1,16 @@
+services:
+
+  clients-db:
+    env_file: .env
+    image: "${CLIENTS_DB_IMAGE_NAME}"
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_USER=${CLIENTS_DB_USERNAME}
+      - POSTGRES_PASSWORD=${CLIENTS_DB_PASSWORD}
+      - POSTGRES_DB=${CLIENTS_DB_NAME}
+
+networks:
+  default:
+    name: ${CLIENTS_NETWORK}
+    external: true
