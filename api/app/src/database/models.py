@@ -1,6 +1,6 @@
 from uuid import uuid4
 from datetime import datetime
-from sqlalchemy import MetaData, Column, String, ForeignKey, DateTime
+from sqlalchemy import MetaData, Column, String, ForeignKey, DateTime, Float
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import declarative_base
 
@@ -18,6 +18,8 @@ class Client(Base):
     password = Column(String(), nullable=False)
     avatar = Column(String(), nullable=False)
     creation_date = Column(DateTime(), default=datetime.now(), nullable=False)
+    latitude = Column(Float(), nullable=False)
+    longitude = Column(Float(), nullable=False)
 
 
 class Match(Base):

@@ -2,12 +2,10 @@ from fastapi import FastAPI, Request, Response, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 
-from src.services.serializers import validate_email
+from src.services.serializers import AVAILABLE_GENDER, validate_email, validate_user_creation_data, validate_token
 from src.services.main_service import get_client_by_email, create_client, authorize_client, evaluate_client, \
     get_clients_list
 
-SIGNUP_FIELDS = ['gender', 'first_name', 'last_name', 'avatar']
-AVAILABLE_GENDER = ['male', 'female']
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/clients/create")
@@ -23,13 +21,10 @@ async def create_new_user(request: Request, response: Response):
 
         client_with_email = await get_client_by_email(form['email'])
         if not client_with_email:
-            if any([bool(field not in form.keys()) for field in SIGNUP_FIELDS]):
+            is_form_valid, result = validate_user_creation_data(form)
+            if not is_form_valid:
                 response.status_code = status.HTTP_400_BAD_REQUEST
-                return {"detail": "Incorrect fields for user creating. "
-                                  "Send fields: email, password, gender, first_name, last_name, avatar"}
-            if form['gender'].lower() not in AVAILABLE_GENDER:
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return {"detail": "Incorrect gender. Available: male or female."}
+                return result
             token = await create_client(form)
         else:
             token = await authorize_client(client_with_email.id, client_with_email.password, form["password"])
@@ -47,7 +42,11 @@ async def create_new_user(request: Request, response: Response):
 @app.post("/api/clients/{client_id}/match")
 async def match_client(token: Annotated[str, Depends(oauth2_scheme)], client_id, response: Response):
     try:
-        is_success, result = await evaluate_client(token, client_id)
+        is_token_valid, initiator = await validate_token(token)
+        if not is_token_valid:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"detail": "Incorrect token"}
+        is_success, result = await evaluate_client(initiator, client_id)
         if not is_success:
             response.status_code = status.HTTP_400_BAD_REQUEST
         return result
@@ -58,13 +57,18 @@ async def match_client(token: Annotated[str, Depends(oauth2_scheme)], client_id,
 
 
 @app.get("/api/list")
-async def get_clients(token: Annotated[str, Depends(oauth2_scheme)], response: Response,
-                      gender: str = None, first_name: str = None, last_name: str = None, sort_by_date: bool = False):
+async def get_clients(response: Response, token: Annotated[str, Depends(oauth2_scheme)] = None,
+                      gender: str = None, first_name: str = None, last_name: str = None,
+                      sort_by_date: bool = False, distance: int = None):
     try:
+        is_token_valid, initiator = await validate_token(token)
+        if not is_token_valid:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"detail": "Incorrect token"}
         if gender and gender.lower() not in AVAILABLE_GENDER:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"detail": "Incorrect gender. Available: male or female."}
-        result = await get_clients_list(gender, first_name, last_name, sort_by_date)
+        result = await get_clients_list(initiator, gender, first_name, last_name, sort_by_date, distance)
         return result
     except Exception as e:
         print(e)

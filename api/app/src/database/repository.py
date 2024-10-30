@@ -29,6 +29,8 @@ class Repository:
             email=client_info["email"],
             password=client_password,
             avatar=avatar_path,
+            latitude=float(client_info["latitude"]),
+            longitude=float(client_info["longitude"]),
             creation_date=datetime.datetime.now()
         )
         self.session.add(new_client)
