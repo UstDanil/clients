@@ -44,7 +44,7 @@ async def match_client(token: Annotated[str, Depends(oauth2_scheme)], client_id,
     try:
         is_token_valid, initiator = await validate_token(token)
         if not is_token_valid:
-            response.status_code = status.HTTP_400_BAD_REQUEST
+            response.status_code = status.HTTP_401_UNAUTHORIZED
             return {"detail": "Incorrect token"}
         is_success, result = await evaluate_client(initiator, client_id)
         if not is_success:
@@ -63,7 +63,7 @@ async def get_clients(response: Response, token: Annotated[str, Depends(oauth2_s
     try:
         is_token_valid, initiator = await validate_token(token)
         if not is_token_valid:
-            response.status_code = status.HTTP_400_BAD_REQUEST
+            response.status_code = status.HTTP_401_UNAUTHORIZED
             return {"detail": "Incorrect token"}
         if gender and gender.lower() not in AVAILABLE_GENDER:
             response.status_code = status.HTTP_400_BAD_REQUEST

@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Swagger Clients - OpenAPI 3.0
+  description:
+    A project with the creation and authorization of clients, displaying a list of suitable clients and their evaluation.
+  version: 1.0.0
+tags:
+  - name: Clients
+paths:
+  /api/clients/create:
+    post:
+      tags:
+        - Clients
+      summary: Get client token
+      requestBody:
+        description: Client params
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9
+  /api/clients/{client_id}/match:
+    post:
+      tags:
+        - Clients
+      summary: Match Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            title: Client Id
+      responses:
+        '200':
+          description: Successful Response
+        '400':
+          description: The client has reached the maximum number of matches for day or already has the requested match.
+        '401':
+          description: Not authenticated
+  /api/list:
+    get:
+      tags:
+        - Clients
+      summary: Get Clients
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: gender
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: first_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_by_date
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: distance
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResponse'
+        '400':
+          description: Invalid input params
+        '401':
+          description: Not authenticated
+components:
+  schemas:
+    ClientCreateRequest:
+      type: object
+      required:
+      - "email"
+      - "password"
+      properties:
+        avatar:
+          type: string
+          format: binary
+        gender:
+          type: string
+          example: male
+        first_name:
+          type: string
+          example: first_name
+        last_name:
+          type: string
+          example: last_name
+        email:
+          type: string
+          example: email@rambler.ru
+        password:
+          type: string
+          example: '12345'
+        latitude:
+          type: number
+          example: 55.443
+        longitude:
+          type: number
+          example: 37.363
+    ListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          gender:
+            type: string
+            example: male
+          first_name:
+            type: string
+            example: first_name
+          last_name:
+            type: string
+            example: last_name
+          avatar:
+            type: string
+            example: /application/static/avatar/cc23ebf7-fb69-4c3b-8f16-db299856eab5.jpg
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
