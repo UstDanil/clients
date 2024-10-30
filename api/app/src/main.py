@@ -1,13 +1,16 @@
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, Response, status, Depends
+from fastapi.security import OAuth2PasswordBearer
+from typing import Annotated
 
 from src.services.serializers import validate_email
-from src.services.main_service import get_client_by_email, create_client, authorize_client
+from src.services.main_service import get_client_by_email, create_client, authorize_client, evaluate_client
 
 
 SIGNUP_FIELDS = ['gender', 'first_name', 'last_name', 'avatar']
 AVAILABLE_GENDER = ['male', 'female']
 
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/clients/create")
 
 
 @app.post("/api/clients/create", status_code=201)
@@ -35,6 +38,19 @@ async def create_new_user(request: Request, response: Response):
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"detail": "Wrong input client data."}
         return {"token": token}
+    except Exception as e:
+        print(e)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"detail": "An unexpected error occurred. Contact your administrator."}
+
+
+@app.post("/api/clients/{client_id}/match")
+async def match_client(token: Annotated[str, Depends(oauth2_scheme)], client_id, response: Response):
+    try:
+        is_success, result = await evaluate_client(token, client_id)
+        if not is_success:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+        return result
     except Exception as e:
         print(e)
         response.status_code = status.HTTP_400_BAD_REQUEST
