@@ -3,7 +3,7 @@ import redis
 import datetime
 from uuid import uuid4
 from src.database.service import get_client_by_email_from_base, get_client_by_id_from_base, create_client_in_base, \
-    get_match_from_base, create_match_in_base
+    get_match_from_base, create_match_in_base, get_clients_list_from_base
 from src.services.password_service import encrypt_password, check_password
 from src.services.token_service import generate_jwt, decode_jwt
 from src.services.image_service import add_watermark_to_avatar
@@ -64,3 +64,16 @@ async def evaluate_client(token, client_id):
         initiator = await get_client_by_id_from_base(initiator_id)
         send_emails(initiator, client)
     return True, {"detail": "OK"}
+
+
+async def get_clients_list(gender, first_name, last_name, sort_by_date):
+    clients = await get_clients_list_from_base(gender, first_name, last_name, sort_by_date)
+    result = [
+        {
+            "gender": client.gender,
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "avatar": client.avatar,
+        } for client in clients
+    ]
+    return result

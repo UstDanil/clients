@@ -1,5 +1,6 @@
 from uuid import uuid4
-from sqlalchemy import MetaData, Column, String, ForeignKey
+from datetime import datetime
+from sqlalchemy import MetaData, Column, String, ForeignKey, DateTime
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import declarative_base
 
@@ -16,6 +17,7 @@ class Client(Base):
     email = Column(String(), nullable=False, unique=True)
     password = Column(String(), nullable=False)
     avatar = Column(String(), nullable=False)
+    creation_date = Column(DateTime(), default=datetime.now(), nullable=False)
 
 
 class Match(Base):

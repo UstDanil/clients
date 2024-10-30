@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 
 from src.services.serializers import validate_email
-from src.services.main_service import get_client_by_email, create_client, authorize_client, evaluate_client
-
+from src.services.main_service import get_client_by_email, create_client, authorize_client, evaluate_client, \
+    get_clients_list
 
 SIGNUP_FIELDS = ['gender', 'first_name', 'last_name', 'avatar']
 AVAILABLE_GENDER = ['male', 'female']
@@ -27,7 +27,7 @@ async def create_new_user(request: Request, response: Response):
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 return {"detail": "Incorrect fields for user creating. "
                                   "Send fields: email, password, gender, first_name, last_name, avatar"}
-            if form['gender'] not in AVAILABLE_GENDER:
+            if form['gender'].lower() not in AVAILABLE_GENDER:
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 return {"detail": "Incorrect gender. Available: male or female."}
             token = await create_client(form)
@@ -50,6 +50,21 @@ async def match_client(token: Annotated[str, Depends(oauth2_scheme)], client_id,
         is_success, result = await evaluate_client(token, client_id)
         if not is_success:
             response.status_code = status.HTTP_400_BAD_REQUEST
+        return result
+    except Exception as e:
+        print(e)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"detail": "An unexpected error occurred. Contact your administrator."}
+
+
+@app.get("/api/list")
+async def get_clients(token: Annotated[str, Depends(oauth2_scheme)], response: Response,
+                      gender: str = None, first_name: str = None, last_name: str = None, sort_by_date: bool = False):
+    try:
+        if gender and gender.lower() not in AVAILABLE_GENDER:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"detail": "Incorrect gender. Available: male or female."}
+        result = await get_clients_list(gender, first_name, last_name, sort_by_date)
         return result
     except Exception as e:
         print(e)

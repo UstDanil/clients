@@ -33,3 +33,10 @@ async def create_match_in_base(initiator_id, client_id):
     async with session_maker() as session:
         repository = Repository(session)
         await repository.create_match(initiator_id, client_id)
+
+
+async def get_clients_list_from_base(gender, first_name, last_name, sort_by_date):
+    async with session_maker() as session:
+        repository = Repository(session)
+        clients = await repository.get_clients(gender, first_name, last_name, sort_by_date)
+    return clients
